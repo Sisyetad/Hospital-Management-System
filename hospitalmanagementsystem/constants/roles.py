@@ -1,0 +1,5 @@
+ROLE_DOCTOR = 'doctor'
+ROLE_PATIENT = 'patient'
+ROLE_RECEPTIONIST = 'receptionist'
+ROLE_BRANCH = 'branch'
+ROLE_HEADOFFICE = 'headoffice'
