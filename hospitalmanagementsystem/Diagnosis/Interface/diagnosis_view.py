@@ -18,22 +18,31 @@ class DiagnosisViewSet(viewsets.ViewSet):
     def get_service(self, request):
         return DiagnosisService(DiagnosisRepository(current_user=request.user))
     
+
     @extend_schema(
         operation_id="diagnosis_list",
         responses=DiagnosisSerializer(many=True),
+        parameters=[
+            # document query parameter
+            OpenApiParameter("patient_id", int, OpenApiParameter.QUERY, required=True),
+        ],
     )
     def list(self, request):
-        """GET /diagnoses/"""
-        serializer = DiagnosisSerializer(data=request.data, context={"action":"list"})
+        patient_id = request.query_params.get("patient_id")
+        data = {"patient_id": patient_id}
+        serializer = DiagnosisSerializer(data=data, context={"action":"list"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
         try:
             service = self.get_service(request=request)
-            result = service.getDiagnoses(patient_id=data['patient_id'])
-            serializer = DiagnosisSerializer(result, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            diagnoses = service.getDiagnoses(patient_id=data['patient_id'])
         except Exception as e:
-            return Response({"error":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        serializer = DiagnosisSerializer(diagnoses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+   
     
     @extend_schema(
         operation_id="diagnosis_retrieve",
