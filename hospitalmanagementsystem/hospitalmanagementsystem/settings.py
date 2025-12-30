@@ -46,7 +46,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'hospitalmanagementsystem.core.middleware.redis_cache_middleware.RedisCacheMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -157,6 +157,7 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 USE_X_FORWARDED_HOST = True
 SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS.
@@ -166,7 +167,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
-    f'https://{HOST}',
+    "https://hospital-management-system-kappa-nine.vercel.app",
 ]
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
