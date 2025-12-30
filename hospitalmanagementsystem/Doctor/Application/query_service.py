@@ -26,10 +26,8 @@ class DoctorQueryService:
         return doctor
 
     @cache_get("doctors_of_branch", "branch_id")
-    def get_doctors_of_branch(self, branch_id: int = None) -> list[DoctorEntity]:
+    def get_doctors_of_branch(self, branch_id: int = None) -> list[Optional[DoctorEntity]]:
         doctors =  [doc for doc in self.repo.getDoctorsOfBranch(branch_id)]
-        if not doctors:
-            raise ValidationError('There is no doctor in this branch.')
         return doctors
     
     @cache_get("available_doctors", "branch_id")
