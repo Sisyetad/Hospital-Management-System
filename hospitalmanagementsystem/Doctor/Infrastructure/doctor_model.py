@@ -10,7 +10,11 @@ class DoctorModel(models.Model):
     department = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, default='+251')
     location = models.CharField(max_length=255, default='None')
-    branch = models.ForeignKey(BranchModel, on_delete=models.CASCADE)
+    branch = models.ForeignKey(
+        BranchModel,
+        related_name='doctors',
+        on_delete=models.CASCADE,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=False)

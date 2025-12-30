@@ -5,10 +5,10 @@ from Diagnosis.Domain.diagnosis_entity import DiagnosisEntity
 
 class IDiagnosisRepository(ABC):
     @abstractmethod
-    def createDiagnosis(self, diagnosis_name:str, severity_level:int, related_symptomes:str, clinical_notes:str, patient_id:int, doctor_id:int, medication:str)-> DiagnosisEntity:pass
+    def createDiagnosis(self, diagnosis_name:str, severity_level:int, related_symptomes:str, clinical_notes:str, patient_id:int, medication:str)-> DiagnosisEntity:pass
 
     @abstractmethod
-    def updateDiagnosis(self, diagnosis_id:int, severity_level:str, related_symptomes:str, clinical_notes:str, doctor_id:int, medication:str, updation_reason:str)-> DiagnosisEntity:pass
+    def updateDiagnosis(self, diagnosis_id:int, severity_level:str, related_symptomes:str, clinical_notes:str, medication:str, updation_reason:str)-> DiagnosisEntity:pass
 
     @abstractmethod
     def getDiagnosis(self, diagnosis_id:int)-> DiagnosisEntity:pass

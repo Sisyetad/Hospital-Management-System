@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.exceptions import PermissionDenied, ValidationError
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from Branch.Infrastructure.branch_repo_imp import BranchRepository
 from Branch.Application.branch_services import BranchService
 from Branch.Interface.branch_serializer import BranchSerializer
@@ -10,6 +10,7 @@ from User.Permission.role_permissions import DynamicRolePermission
 
 class BranchViewSet(viewsets.ViewSet):
     serializer_class = BranchSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
 
@@ -31,20 +32,6 @@ class BranchViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @extend_schema(
-        operation_id="branches_retrieve",
-        responses=BranchSerializer,
-    )
-    def retrieve(self, request, pk=None):
-        """GET /branches/{pk}/"""
-        BranchSerializer(context={"action": "retrieve"})
-        try:
-            service = self.get_service(request)
-            branch = service.getBranch(pk)
-            serializer = BranchSerializer(branch)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request):
         """POST /branches/"""
@@ -67,6 +54,15 @@ class BranchViewSet(viewsets.ViewSet):
         except (PermissionDenied, ValidationError) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def update(self, request, pk=None):
         """PUT /branches/{pk}/"""
         serializer = BranchSerializer(data=request.data, context={'action': 'update'})
@@ -86,6 +82,15 @@ class BranchViewSet(viewsets.ViewSet):
         except (PermissionDenied, ValidationError) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request, pk=None):
         """DELETE /branches/{pk}/"""
         BranchSerializer(context={"action": "destroy"})
@@ -94,4 +99,26 @@ class BranchViewSet(viewsets.ViewSet):
             service.deleteBranch(pk)
             return Response({"message": "Branch deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except (PermissionDenied, ValidationError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+    @extend_schema(
+        operation_id="branches_retrieve",
+        responses=BranchSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
+    def retrieve(self, request, pk=None):
+        """GET /branches/{pk}/"""
+        BranchSerializer(context={"action": "retrieve"})
+        try:
+            service = self.get_service(request)
+            branch = service.getBranch(pk)
+            serializer = BranchSerializer(branch)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)

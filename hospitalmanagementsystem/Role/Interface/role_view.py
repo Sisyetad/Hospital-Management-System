@@ -2,6 +2,7 @@ from rest_framework.request import Request
 from rest_framework import status,viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 
 from User.Permission.role_permissions import DynamicRolePermission
 from .role_serializer import RoleSerializer
@@ -10,6 +11,7 @@ from ..Infrastructure.role_repo_imp import RoleRepository
 
 class RoleView(viewsets.ViewSet):
     serializer_class = RoleSerializer
+    lookup_value_regex = r'\\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
@@ -33,6 +35,15 @@ class RoleView(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request: Request, pk=None):
         """DELETE /roles/id"""
         service = self.get_service()
@@ -56,6 +67,15 @@ class RoleView(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def update(self, request: Request, pk=None):
         """PUT /roles/id"""
         serializer = RoleSerializer(data=request.data, context={"action": "update"})

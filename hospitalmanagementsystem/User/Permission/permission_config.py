@@ -28,7 +28,7 @@ ROLE_PERMISSIONS = {
     "DoctorViewSet:list": ["authenticated"],
     "DoctorViewSet:retrieve": ["authenticated"],
     "DoctorViewSet:list_available_doctors": ["authenticated"],
-    "DoctorViewSet:partial_update": [roles.ROLE_DOCTOR],
+    "DoctorViewSet:update_availability": [roles.ROLE_DOCTOR],
 
     # Receptionist Permissions
     "ReceptionistViewSet:create": [roles.ROLE_BRANCH],
@@ -57,6 +57,7 @@ ROLE_PERMISSIONS = {
     "DiagnosisViewSet:retrieve": [roles.ROLE_HEADOFFICE, roles.ROLE_BRANCH, roles.ROLE_DOCTOR, roles.ROLE_PATIENT],
     "DiagnosisViewSet:partial_update":[roles.ROLE_PATIENT],
     "DiagnosisViewSet:display_history":[roles.ROLE_HEADOFFICE],
+    "DiagnosisViewSet:list_by_patient": [roles.ROLE_HEADOFFICE, roles.ROLE_BRANCH, roles.ROLE_DOCTOR, roles.ROLE_PATIENT],
 
     #Queue Permissions
     "QueueViewSet:create": [roles.ROLE_RECEPTIONIST],
@@ -65,5 +66,6 @@ ROLE_PERMISSIONS = {
     "QueueViewSet:list": ["authenticated"],
     "QueueViewSet:retrieve": ["authenticated"],
     "QueueViewSet:partial_update":[roles.ROLE_RECEPTIONIST],
+    "QueueViewSet:list_assigned":[roles.ROLE_DOCTOR],
 }
 

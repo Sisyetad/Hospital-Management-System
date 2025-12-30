@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from User.Permission.role_permissions import DynamicRolePermission
 from Diagnosis.Application.diagnosis_service import DiagnosisService
 from Diagnosis.Infrastructure.diagnosis_repo_imp import DiagnosisRepository
@@ -11,6 +11,7 @@ from Diagnosis.Interface.diagnosis_serializer import DiagnosisSerializer
 
 class DiagnosisViewSet(viewsets.ViewSet):
     serializer_class = DiagnosisSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
@@ -22,7 +23,7 @@ class DiagnosisViewSet(viewsets.ViewSet):
         responses=DiagnosisSerializer(many=True),
     )
     def list(self, request):
-        """GET /diagnosis/"""
+        """GET /diagnoses/"""
         serializer = DiagnosisSerializer(data=request.data, context={"action":"list"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -37,9 +38,16 @@ class DiagnosisViewSet(viewsets.ViewSet):
     @extend_schema(
         operation_id="diagnosis_retrieve",
         responses=DiagnosisSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
     )
     def retrieve(self, request, pk=None):
-        """GET /diagnosis/{pk}"""
+        """GET /diagnoses/{pk}"""
         DiagnosisSerializer(context={"action":"retrieve"})
         try:
             service = self.get_service(request=request)
@@ -50,7 +58,7 @@ class DiagnosisViewSet(viewsets.ViewSet):
             return Response({"error":str(e)}, status=status.HTTP_404_NOT_FOUND)
         
     def create(self, request):
-        """POST /diagnosis/"""
+        """POST /diagnoses/"""
         serializer = DiagnosisSerializer(data=request.data, context={"action":"create"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -62,7 +70,6 @@ class DiagnosisViewSet(viewsets.ViewSet):
                 related_symptomes=data['related_symptomes'],
                 clinical_notes=data['clinical_notes'],
                 patient_id=data['patient_id'],
-                doctor_id=data['doctor_id'],
                 medication=data['medication']
             )
 
@@ -70,8 +77,17 @@ class DiagnosisViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def update(self, request, pk=None):
-        """PUT /diagnosis/{pk}/"""
+        """PUT /diagnoses/{pk}/"""
         serializer = DiagnosisSerializer(data=request.data, context={"action":"update"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -91,8 +107,17 @@ class DiagnosisViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def partial_update(self, request, pk=None):
-        """PATCH /diagnosis/{pk}"""
+        """PATCH /diagnoses/{pk}"""
         serializer =DiagnosisSerializer(data=request.data, context={"action":"partial_update"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -115,8 +140,17 @@ class DiagnosisViewSet(viewsets.ViewSet):
         
 
     @action(detail=True, methods=['get'], url_path='history')
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ]
+    )
     def display_history(self, request, pk=None):
-        """GET /diagnosis/{pk}/history/"""
+        """GET /diagnoses/{pk}/history/"""
         try:
             service = self.get_service(request=request)
             history_queryset = service.displayHistory(diagnosis_id=pk)

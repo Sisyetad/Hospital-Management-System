@@ -30,6 +30,12 @@ class ReceptionistService:
             return self.repository.getReceptionistByID(receptionist_id=receptionist_id)
         except ValidationError as e:
             raise ValidationError(str(e))
+        
+    def getReceptionistByEmail(self, email)-> ReceptionistEntity:
+        try:
+            return self.repository.getReceptionistByEmail(email=email)
+        except ValidationError as e:
+            raise ValidationError(str(e))
 
     def getReceptionistOfBranch(self)-> list[ReceptionistEntity]:
         try:

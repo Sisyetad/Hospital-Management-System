@@ -16,7 +16,7 @@ class DiagnosisRepository(IDiagnosisRepository):
     def __init__(self, current_user:Optional[UserModel]):
         self.current_user = current_user
 
-    def createDiagnosis(self, diagnosis_name, severity_level, related_symptomes, clinical_notes, patient_id, doctor_id, medication)-> DiagnosisEntity:
+    def createDiagnosis(self, diagnosis_name, severity_level, related_symptomes, clinical_notes, patient_id, medication)-> DiagnosisEntity:
         if not self.current_user:
             raise PermissionDenied("Athentication is needed.")
         if self.current_user.role_name.lower() != ROLE_DOCTOR:
@@ -28,8 +28,9 @@ class DiagnosisRepository(IDiagnosisRepository):
             except PatientModel.DoesNotExist:
                 raise ValidationError("Patient with this id is not found.")
             
+            
             try:
-                doctor = DoctorModel.objects.get(pk=doctor_id)
+                doctor = DoctorModel.objects.get(email=self.current_user.email)
             except DoctorModel.DoesNotExist:
                 raise ValidationError("Doctor with this id is not found.")
             
@@ -45,7 +46,7 @@ class DiagnosisRepository(IDiagnosisRepository):
             )
             return diagnosis.to_entity()
 
-    def updateDiagnosis(self, diagnosis_id, severity_level, related_symptomes, clinical_notes, doctor_id, medication, updation_reason)-> DiagnosisEntity:
+    def updateDiagnosis(self, diagnosis_id, severity_level, related_symptomes, clinical_notes, medication, updation_reason)-> DiagnosisEntity:
         if not self.current_user:
             raise PermissionDenied("Authentication is needed.")
         if self.current_user.role_name.lower() != ROLE_DOCTOR:
@@ -58,7 +59,7 @@ class DiagnosisRepository(IDiagnosisRepository):
                 raise ValidationError("Diagnosis with this ID is not found.")
 
             try:
-                doctor = DoctorModel.objects.get(pk=doctor_id)
+                doctor = DoctorModel.objects.get(email=self.current_user.email)
             except DoctorModel.DoesNotExist:
                 raise ValidationError("Doctor with this ID is not found.")
             diagnosis.diagnosis_name = diagnosis.diagnosis_name
@@ -83,12 +84,12 @@ class DiagnosisRepository(IDiagnosisRepository):
                 patient__pk=patient_id,
                 visibility=True
             )
-            if not diagnoses.exists():
-                raise ValidationError("No diagnosis found.")
         else:
             diagnoses = DiagnosisModel.objects.filter(patient__email=self.current_user.email)
-            if not diagnoses.exists():
-                raise ValidationError("No diagnosis found.")
+
+        # Return empty list when no diagnosis is present instead of raising, so API returns 200 with [].
+        if not diagnoses.exists():
+            return []
 
         return [diagnosis.to_entity() for diagnosis in diagnoses]
     

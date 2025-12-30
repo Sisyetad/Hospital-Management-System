@@ -53,3 +53,4 @@ uritemplate
 urllib3
 vine
 wcwidth
+django-cors-headers

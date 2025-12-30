@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.core.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from Doctor.Application.command_service import DoctorCommandService
 from Doctor.Application.query_service import DoctorQueryService
 from Doctor.Infrastructure.doctor_repo_imp import DoctorRepository
@@ -13,17 +13,25 @@ from Doctor.Interface.doctor_serializer import DoctorSerializer
 from User.Permission.role_permissions import DynamicRolePermission
 from Branch.Infrastructure.branch_repo_imp import BranchRepository
 from Role.Infrastructure.role_repo_imp import RoleRepository
+from Receptionist.Infrastructure.receptionist_repo_imp import ReceptionistRepository
+from Receptionist.Application.receptionist_service import ReceptionistService
 
 class DoctorViewSet(viewsets.ViewSet):
     serializer_class = DoctorSerializer
+    lookup_value_regex = r'[^/]+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
     def get_command_service(self, request):
-        return DoctorCommandService(doctor_repo=DoctorRepository(), branch_repo=BranchRepository(current_user=request.user), role_repo=RoleRepository(), current_user= request.user)
+        return DoctorCommandService(
+            doctor_repo=DoctorRepository(),
+            branch_repo=BranchRepository(current_user=request.user),
+            role_repo=RoleRepository(),
+            current_user=request.user
+        )
 
     def get_query_service(self, request):
-        return DoctorQueryService(DoctorRepository())
+        return DoctorQueryService(DoctorRepository(), user=request.user, receRepo=ReceptionistRepository(current_user=request.user))
     
     def create(self, request: Request):
         """POST /doctors/"""
@@ -65,7 +73,7 @@ class DoctorViewSet(viewsets.ViewSet):
             result = service.update_doctor(
                 doctor_id=pk,
                 doctor_name=data['doctor_name'],
-                role_name=data['role']['role_name'],
+                email=data['email'],
                 department=data['department'],
                 phone=data['phone'],
                 location=data['location'],
@@ -79,11 +87,11 @@ class DoctorViewSet(viewsets.ViewSet):
         responses=DoctorSerializer,
     )
     def retrieve(self, request: Request, pk= None):
-        """GET /doctors/{pk}"""
+        """GET /doctors/{id or email}"""
         DoctorSerializer(context={"action": "retrieve"})
         try:
             service = self.get_query_service(request)
-            result = service.get_doctor(doctor_id=pk)
+            result = service.get_doctor_by_email(email=pk) if '@' in str(pk) else service.get_doctor(doctor_id=pk)
             return Response(DoctorSerializer(result).data, status=status.HTTP_200_OK)
 
         except (ValidationError, PermissionDenied) as e:
@@ -107,34 +115,44 @@ class DoctorViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-    def partial_update(self, request: Request, pk=None):
-        """PATCH /doctors/{id}/"""
+
+
+    @action(detail=False, methods=['patch'], url_path=r'availability')
+    @extend_schema(
+        operation_id="doctors_update_availability",
+        responses=DoctorSerializer,
+    )
+    def update_availability(self, request: Request):
+        """PATCH /doctors/availability/ -> Updates logged-in doctor's availability"""
         try:
             service = self.get_command_service(request)
-            doctor = self.get_query_service(request=request).get_doctor(doctor_id=pk)
-
-            if doctor.email != request.user.email:
-                raise PermissionDenied("You are not allowed to update other doctor's profile.")
-            
-            serializer = DoctorSerializer(doctor, data=request.data, context={'action': 'partial_update'}, partial=True)
-            serializer.is_valid(raise_exception=True)
-            data = serializer.validated_data
-            updated_doctor = service.update_doctor_status(status=data["is_available"])
-
+            updated_doctor = service.update_doctor_status()
             return Response(DoctorSerializer(updated_doctor).data, status=status.HTTP_200_OK)
-
         except (ValidationError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-    @action(detail=False, methods=['get'], url_path=r'(?P<branch_id>[^/.]+)/available')
-    def list_available_doctors(self, request, branch_id=None):
-        """GET /doctors/{branch_id}/available/"""
+
+    @action(detail=False, methods=['get'], url_path=r'available')
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='branch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+        responses=DoctorSerializer(many=True),
+        operation_id="doctors_available_list",
+    )
+    def list_available_doctors(self, request):
+        """GET /doctors/available/"""
         DoctorSerializer(context={"action": "list_available_doctors"})
         try:
             service = self.get_query_service(request)
+            recepService = ReceptionistService(ReceptionistRepository(current_user=request.user))
+            receptionist = recepService.getReceptionistByEmail(request.user.email)
+            branch_id = receptionist.branch.branch_id
             doctors = service.get_available_doctors(branch_id=branch_id)
-            
             for doc in doctors:
                 print(f"Doctor: {doc.doctor_name}, is_available: {doc.is_available} (type: {type(doc.is_available)})")
             serializer = DoctorSerializer(doctors, many=True)

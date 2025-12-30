@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from Queue.Domain.queue_entity import QueueEntity
 
@@ -8,7 +9,7 @@ class IQueueRepository(ABC):
     def createQueue(self, patient_id:int)-> QueueEntity:pass
 
     @abstractmethod
-    def updateQueue(self, queue_id:int, status:int)-> QueueEntity:pass
+    def updateQueue(self, queue_id:int, status:int)-> Optional[QueueEntity]:pass
 
     @abstractmethod
     def deleteQueue(self, queue_id:int)-> str:pass

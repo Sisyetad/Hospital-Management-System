@@ -6,9 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from User.Permission.role_permissions import DynamicRolePermission
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 class UserViewSet(viewsets.ViewSet):
     serializer_class = UserSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
 
@@ -33,6 +34,13 @@ class UserViewSet(viewsets.ViewSet):
     @extend_schema(
         operation_id="users_retrieve",
         responses=UserSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
     )
     def retrieve(self, request, pk=None):
         """GET /users/{id}/"""
@@ -45,18 +53,39 @@ class UserViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status= status.HTTP_404_NOT_FOUND)
     
-    def update(self, request):
-        """PUT /users/"""
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
+    def update(self, request, pk=None):
+        """PUT /users/{id}/"""
         try:
             service = self.get_service(request=request)
-            serializer = UserSerializer(data=request.data, context= {"action":"update"})
+            serializer = UserSerializer(
+                data={**request.data, "user_id": pk},
+                context={"action": "update"},
+            )
             serializer.is_valid(raise_exception=True)
             user_entity = serializer.to_entity()
             user = service.update_user(user=user_entity)
-            return Response(UserSerializer(user).data, status= status.HTTP_200_OK)
+            return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status= status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request, pk=None):
         """DELETE /users/{id}/"""
         UserSerializer(context={"action": "destroy"})

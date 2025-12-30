@@ -78,7 +78,13 @@ class PatientRepository(IPatientRepository):
             raise ValidationError("Patient with this id does not exist!")
     
     def getPatientByID(self, patient_id)-> PatientEntity:
+        if self.current_user is None:
+            raise PermissionDenied("To get patient you have to authenticated!")
         try:
+            if self.current_user.role_name.lower() == ROLE_PATIENT:
+                patient = PatientModel.objects.get(email= self.current_user.email)
+                return patient.to_entity()
+
             patient = PatientModel.objects.get(pk=patient_id)
             return patient.to_entity()
         except PatientModel.DoesNotExist:

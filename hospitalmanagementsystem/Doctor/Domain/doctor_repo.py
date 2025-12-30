@@ -1,15 +1,11 @@
 from abc import ABC, abstractmethod
-
-from Branch.Infrastructure.branch_model import BranchModel
-from Role.Infrastructure.role_model import RoleModel
-
 from ..Domain.doctor_entity import DoctorEntity
 
 
 class IDoctorRepository(ABC):
 
     @abstractmethod
-    def createDoctor(self, doctor_name:str, email:str, role_model:RoleModel, department:str, phone:str, location:str, branch_model:BranchModel) -> DoctorEntity: pass
+    def createDoctor(self, doctor_name:str, email:str, role_name:str, department:str, phone:str, location:str, branch_email:str) -> DoctorEntity: pass
 
     @abstractmethod
     def deleteDoctor(self, doctor_id)-> str:pass
@@ -21,10 +17,13 @@ class IDoctorRepository(ABC):
     def getDoctorsOfBranch(self, branch_id:int) -> list[DoctorEntity]:pass
 
     @abstractmethod
-    def update(self, doctor_id:int, doctor_name: str, department: str) -> DoctorEntity:pass
+    def getDoctorByEmail(self, email: str) -> DoctorEntity: pass
 
     @abstractmethod
-    def updateStatusofDoctor(self, status, email)-> DoctorEntity:pass
+    def update(self, doctor_id:int, doctor_name: str, email: str, department: str, phone: str, location: str) -> DoctorEntity:pass
+
+    @abstractmethod
+    def updateStatusofDoctor(self, email)-> DoctorEntity:pass
 
     @abstractmethod
     def getDoctors(self) -> list[DoctorEntity]: pass

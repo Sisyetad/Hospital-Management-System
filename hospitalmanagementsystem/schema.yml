@@ -69,20 +69,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/CustomTokenRefresh'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/CustomTokenRefresh'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/CustomTokenRefresh'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRefresh'
+                $ref: '#/components/schemas/CustomTokenRefresh'
           description: ''
   /api/v1/branches/:
     get:
@@ -136,6 +136,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -156,6 +162,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -188,6 +200,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -199,7 +217,7 @@ paths:
   /api/v1/diagnoses/:
     get:
       operationId: diagnosis_list
-      description: GET /diagnosis/
+      description: GET /diagnoses/
       tags:
       - api
       security:
@@ -215,7 +233,7 @@ paths:
           description: ''
     post:
       operationId: api_v1_diagnoses_create
-      description: POST /diagnosis/
+      description: POST /diagnoses/
       tags:
       - api
       requestBody:
@@ -241,12 +259,12 @@ paths:
   /api/v1/diagnoses/{id}/:
     get:
       operationId: diagnosis_retrieve
-      description: GET /diagnosis/{pk}
+      description: GET /diagnoses/{pk}
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
         required: true
       tags:
       - api
@@ -261,12 +279,12 @@ paths:
           description: ''
     put:
       operationId: api_v1_diagnoses_update
-      description: PUT /diagnosis/{pk}/
+      description: PUT /diagnoses/{pk}/
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
         required: true
       tags:
       - api
@@ -292,12 +310,12 @@ paths:
           description: ''
     patch:
       operationId: api_v1_diagnoses_partial_update
-      description: PATCH /diagnosis/{pk}
+      description: PATCH /diagnoses/{pk}
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
         required: true
       tags:
       - api
@@ -324,12 +342,13 @@ paths:
   /api/v1/diagnoses/{id}/history/:
     get:
       operationId: api_v1_diagnoses_history_retrieve
-      description: GET /diagnosis/{pk}/history/
+      description: GET /diagnoses/{pk}/history/
       parameters:
       - in: path
         name: id
         schema:
           type: string
+          pattern: ^\d+$
         required: true
       tags:
       - api
@@ -385,36 +404,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Doctor'
           description: ''
-  /api/v1/doctors/{branch_id}/available/:
-    get:
-      operationId: api_v1_doctors_available_retrieve
-      description: GET /doctors/{branch_id}/available/
-      parameters:
-      - in: path
-        name: branch_id
-        schema:
-          type: string
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Doctor'
-          description: ''
   /api/v1/doctors/{id}/:
     get:
       operationId: doctors_retrieve
-      description: GET /doctors/{pk}
+      description: GET /doctors/{id or email}
       parameters:
       - in: path
         name: id
         schema:
           type: string
+          pattern: ^[^/]+$
         required: true
       tags:
       - api
@@ -435,6 +434,7 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^[^/]+$
         required: true
       tags:
       - api
@@ -450,37 +450,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Doctor'
         required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Doctor'
-          description: ''
-    patch:
-      operationId: api_v1_doctors_partial_update
-      description: PATCH /doctors/{id}/
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedDoctor'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedDoctor'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedDoctor'
       security:
       - jwtAuth: []
       responses:
@@ -498,6 +467,7 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^[^/]+$
         required: true
       tags:
       - api
@@ -506,6 +476,47 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/doctors/availability/:
+    patch:
+      operationId: api_v1_doctors_availability_partial_update
+      description: PATCH /doctors/availability/ -> Updates logged-in doctor's availability
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDoctor'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDoctor'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDoctor'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+          description: ''
+  /api/v1/doctors/available/:
+    get:
+      operationId: api_v1_doctors_available_retrieve
+      description: GET /doctors/available/
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+          description: ''
   /api/v1/patients/:
     get:
       operationId: patients_list
@@ -558,6 +569,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -578,6 +595,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -610,6 +633,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -669,6 +698,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -689,6 +724,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -720,6 +761,7 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
         required: true
       tags:
       - api
@@ -751,6 +793,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -759,6 +807,21 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/queues/assigned/:
+    get:
+      operationId: queues_list_of_assigned
+      description: GET /queues/assigned/
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Queue'
+          description: ''
   /api/v1/receptionists/:
     get:
       operationId: receptionists_list
@@ -805,12 +868,18 @@ paths:
   /api/v1/receptionists/{id}/:
     get:
       operationId: receptionist_retrieve
-      description: GET /receptionist/{id}
+      description: GET /receptionists/{id}
       parameters:
       - in: path
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -825,12 +894,18 @@ paths:
           description: ''
     put:
       operationId: api_v1_receptionists_update
-      description: PUT .receptionist/{id}
+      description: PUT /receptionists/{id}
       parameters:
       - in: path
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -863,6 +938,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -923,6 +1004,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -955,6 +1042,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -989,6 +1082,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -1003,12 +1102,13 @@ paths:
           description: ''
     put:
       operationId: api_v1_users_update
-      description: PUT /users/{id}/
+      description: PUT /users/
       parameters:
       - in: path
         name: id
         schema:
           type: string
+          pattern: ^\\d+$
         required: true
       tags:
       - api
@@ -1041,6 +1141,12 @@ paths:
         name: id
         schema:
           type: string
+          pattern: ^\\d+$
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
         required: true
       tags:
       - api
@@ -1817,6 +1923,17 @@ components:
       - role_name
       - speciality
       - updated_at
+    CustomTokenRefresh:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
     Diagnosis:
       type: object
       properties:
@@ -2099,9 +2216,15 @@ components:
           type: integer
         doctor_id:
           type: integer
-        department:
+        assigned_department:
           type: string
         patient_name:
+          type: string
+          readOnly: true
+        pid:
+          type: string
+          readOnly: true
+        doctor_name:
           type: string
           readOnly: true
     PatchedUser:
@@ -2179,13 +2302,21 @@ components:
           type: integer
         doctor_id:
           type: integer
-        department:
+        assigned_department:
           type: string
         patient_name:
           type: string
           readOnly: true
+        pid:
+          type: string
+          readOnly: true
+        doctor_name:
+          type: string
+          readOnly: true
       required:
+      - doctor_name
       - patient_name
+      - pid
       - queue_id
     Receptionist:
       type: object
@@ -2199,8 +2330,6 @@ components:
           type: string
           format: email
         phone:
-          type: string
-        speciality:
           type: string
         location:
           type: string

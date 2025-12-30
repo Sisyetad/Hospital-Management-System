@@ -13,6 +13,9 @@ class IReceptionistRepository(ABC):
 
     @abstractmethod
     def getReceptionistByID(self, receptionist_id): pass
+    
+    @abstractmethod
+    def getReceptionistByEmail(self, email): pass
 
     @abstractmethod
     def getReceptionistOfBranch(self): pass

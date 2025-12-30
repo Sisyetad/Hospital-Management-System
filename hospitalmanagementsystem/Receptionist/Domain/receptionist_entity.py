@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from Role.Domain.role_entity import Role
+from Branch.Domain.branch_entity import BranchEntity
 
 @dataclass
 class ReceptionistEntity:
@@ -11,7 +12,7 @@ class ReceptionistEntity:
     email: str
     phone: str
     location: str
-    branch: str
+    branch: BranchEntity
     role: Role
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

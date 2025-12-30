@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from Queue.Interface.queue_view import QueueViewSet
@@ -6,4 +7,7 @@ from Queue.Interface.queue_view import QueueViewSet
 router = DefaultRouter()
 router.register(r'', QueueViewSet, basename= 'queue')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+	# Explicit route for assigned queues to avoid router issues.
+	path('assigned/', QueueViewSet.as_view({'get': 'list_assigned'}), name='queue-assigned'),
+]

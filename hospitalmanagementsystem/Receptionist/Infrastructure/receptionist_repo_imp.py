@@ -84,6 +84,13 @@ class ReceptionistRepository(IReceptionistRepository):
             return receptionist.to_entity()
         except ReceptionistModel.DoesNotExist:
             raise ValidationError("Receptionist not Found!")
+        
+    def getReceptionistByEmail(self, email)-> ReceptionistEntity:
+        try:
+            receptionist = ReceptionistModel.objects.get(email= email)
+            return receptionist.to_entity()
+        except ReceptionistModel.DoesNotExist:
+            raise ValidationError("Receptionist not Found!")
 
     def getReceptionistOfBranch(self)-> list[ReceptionistEntity]:
         receptionists = ReceptionistModel.objects.select_related('branch', 'role').filter(branch__email = self.current_user.email)

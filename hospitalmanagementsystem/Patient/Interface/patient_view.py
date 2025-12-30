@@ -6,10 +6,11 @@ from User.Permission.role_permissions import DynamicRolePermission
 from Patient.Application.patient_service import PatientService
 from Patient.Infrastructure.patient_repo_imp import PatientRepository
 from Patient.Interface.patient_serializer import PatientSerializer
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 class PatientViewSet(viewsets.ViewSet):
     serializer_class = PatientSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
@@ -34,6 +35,13 @@ class PatientViewSet(viewsets.ViewSet):
     @extend_schema(
         operation_id="patients_retrieve",
         responses=PatientSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
     )
     def retrieve(self, request, pk=None):
         """Get /patients/{pk}"""
@@ -66,6 +74,15 @@ class PatientViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def update(self, request, pk=None):
         """PUT /patients/{pk}"""
         serializer = PatientSerializer(data=request.data, context={'action': 'update'})
@@ -86,6 +103,15 @@ class PatientViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request, pk=None):
         """DELETE /patients/{pk}"""
         PatientSerializer(context={'action': 'destroy'})

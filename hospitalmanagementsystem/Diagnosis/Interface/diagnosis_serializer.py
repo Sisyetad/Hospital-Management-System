@@ -16,7 +16,7 @@ class DiagnosisSerializer(serializers.Serializer):
     def validate(self, data):
         action = self.context.get('action')
         if action == 'create':
-            required_fields = ['diagnosis_name', 'severity_level', 'related_symptomes', 'clinical_notes', 'patient_id', 'doctor_id']
+            required_fields = ['diagnosis_name', 'severity_level', 'related_symptomes', 'clinical_notes', 'patient_id','medication']
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
                 raise serializers.ValidationError(f"Missing required fields for create usecase:{', '.join(missing_fields)}")

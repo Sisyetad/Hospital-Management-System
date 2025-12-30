@@ -31,24 +31,31 @@ class QueueRepository(IQueueRepository):
         )
         return queue.to_entity()
     
-    def updateQueue(self, queue_id, status)-> QueueEntity:
+    def updateQueue(self, queue_id, status)-> Optional[QueueEntity]:
         if not self.current_user:
             raise PermissionDenied("User must be Authenticated")
-        if self.current_user.role_name.lower() != ROLE_RECEPTIONIST:
-            raise PermissionDenied("This user is not allowed to create queue")
+        if self.current_user.role_name.lower() not in [ROLE_RECEPTIONIST, ROLE_DOCTOR]:
+            raise PermissionDenied("This user is not allowed to update queue")
         
         try:
             queue = QueueModel.objects.get(pk=queue_id)
             if status == 3:
+                # Free the doctor and close out the queue, then delete it.
                 try:
                     doctor = DoctorModel.objects.get(pk=queue.doctor.pk)
                     doctor.is_available = True
                     doctor.save()
                 except DoctorModel.DoesNotExist:
                     raise ValidationError("No doctor with this id.")
-            queue.status = status
-            queue.save()
-            return queue.to_entity()
+                queue.status = status
+                queue.save()
+                queue.delete()
+                return None
+            else:
+                queue.status = status
+                queue.save()
+                return queue.to_entity()
+                
         except QueueModel.DoesNotExist:
             raise ValidationError("Queue with this id is not found!")
     
@@ -103,6 +110,9 @@ class QueueRepository(IQueueRepository):
                 doctor.save()
             except DoctorModel.DoesNotExist:
                 raise ValidationError("Doctor with this id does not exist or may not available!")
+            if queue.doctor:
+                queue.doctor.is_available = True
+                queue.doctor.save()
             queue.doctor = doctor
             queue.save()
 

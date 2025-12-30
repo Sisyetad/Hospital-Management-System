@@ -1,3 +1,4 @@
+from typing import Optional
 from Queue.Domain.queue_repo import IQueueRepository
 from Queue.Domain.queue_entity import QueueEntity
 
@@ -12,7 +13,7 @@ class QueueService:
         except Exception as e:
             raise Exception(str(e))
         
-    def updateQueue(self, queue_id:int, status:int)-> QueueEntity:
+    def updateQueue(self, queue_id:int, status:int)-> Optional[QueueEntity]:
         try:
             return self.repository.updateQueue(queue_id=queue_id, status=status)
         except Exception as e:

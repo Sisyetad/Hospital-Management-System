@@ -1,7 +1,7 @@
 from rest_framework import status,viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from User.Permission.role_permissions import DynamicRolePermission
 from Receptionist.Application.receptionist_service import ReceptionistService
 from Receptionist.Infrastructure.receptionist_repo_imp import ReceptionistRepository
@@ -9,6 +9,7 @@ from Receptionist.Interface.receptionist_serializer import ReceptionistSerialize
 
 class ReceptionistViewSet(viewsets.ViewSet):
     serializer_class = ReceptionistSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
@@ -51,19 +52,35 @@ class ReceptionistViewSet(viewsets.ViewSet):
     @extend_schema(
         operation_id="receptionist_retrieve",
         responses=ReceptionistSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
     )
     def retrieve(self, request, pk= None):
-        """GET /receptionist/{id}"""
+        """GET /receptionists/{id}"""
         try:
             service = self.get_service(request=request)
-            receptionist = service.getReceptionitByID(pk)
+            receptionist = service.getReceptionistByID(pk)
             serializer = ReceptionistSerializer(receptionist)
             return Response(serializer.data, status= status.HTTP_200_OK)
         except Exception as e:
             return Response({"error":str(e)}, status= status.HTTP_404_NOT_FOUND)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def update(self, request, pk=None):
-        """PUT .receptionist/{id}"""
+        """PUT /receptionists/{id}"""
         serializer = ReceptionistSerializer(data=request.data, context={"action": "update"})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -75,10 +92,19 @@ class ReceptionistViewSet(viewsets.ViewSet):
                 phone=data['phone'],
                 location=data['location']
             )
-            return Response(result.data, status=status.HTTP_200_OK)
+            return Response(ReceptionistSerializer(result).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request, pk=None):
         """DELETE /receptionists/{id}"""
         try:

@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -6,9 +7,10 @@ from User.Permission.role_permissions import DynamicRolePermission
 from Queue.Application.queue_service import QueueService
 from Queue.Infrastructure.queue_repo_imp import QueueRepository
 from Queue.Interface.queue_serializer import QueueSerializer
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 class QueueViewSet(viewsets.ViewSet):
     serializer_class = QueueSerializer
+    lookup_value_regex = r'\d+'
     def get_permissions(self):
         return [IsAuthenticated(), DynamicRolePermission()]
     
@@ -27,6 +29,7 @@ class QueueViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
       
+      
     @extend_schema(
         operation_id="queues_list",
         responses=QueueSerializer(many=True),
@@ -41,22 +44,58 @@ class QueueViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_404_NOT_FOUND)
-        
+
     @extend_schema(
-        operation_id="queues_retrieve",
+        operation_id="queues_list_of_assigned",
         responses=QueueSerializer,
     )
-    def retrieve(self, request, pk=None):
-        """GET/queues/{pk}"""
-        QueueSerializer(context={"action":"retrieve"})
+    @action(detail=False, methods=["get"], url_path="assigned")
+    def list_assigned(self, request):
+        """GET /queues/assigned/"""
+        QueueSerializer(context={"action":"list_assigned"})
         try:
             service = self.get_service(request=request)
-            result = service.getQueue(queue_id=pk)
-            return Response(QueueSerializer(result).data, status=status.HTTP_200_OK)
+            result = service.getQueues()
+            print( request.user.pk, "-----------------", result)
+            assigned_queues = [queue for queue in result if queue.doctor is not None and queue.doctor.email == request.user.email]
+            serializer = QueueSerializer(assigned_queues, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
+    def update(self, request, pk=None):
+        """PUT /queues/{pk}"""
+        serializer = QueueSerializer(data=request.data, context={"action":"update"})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            service = self.get_service(request=request)
+            result = service.updateQueue(queue_id=pk, status=data['status'])
+            if result is None:
+                return Response({"message":"Queue is completed and deleted successfully."}, status=status.HTTP_200_OK)
+            return Response(QueueSerializer(result).data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+        
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def destroy(self, request, pk=None):
         """DELETE /queues/{pk}"""
         QueueSerializer(context={"action":"destroy"})
@@ -96,15 +135,24 @@ class QueueViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, pk=None):
-        """PUT /queues/{pk}"""
-        serializer = QueueSerializer(data=request.data, context={"action":"update"})
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
+        
+    @extend_schema(
+        operation_id="queues_retrieve",
+        responses=QueueSerializer,
+        parameters=[
+            OpenApiParameter(
+                name='pk',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
+    def retrieve(self, request, pk=None):
+        """GET/queues/{pk}"""
+        QueueSerializer(context={"action":"retrieve"})
         try:
             service = self.get_service(request=request)
-            result = service.updateQueue(queue_id=pk, status=data['status'])
+            result = service.getQueue(queue_id=pk)
             return Response(QueueSerializer(result).data, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error":str(e)}, status=status.HTTP_404_NOT_FOUND)
