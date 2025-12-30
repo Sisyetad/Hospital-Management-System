@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   web:
-    image: sisyetad/medicalscheduler:latest
+    image: sisyetad/hospitalmanagementsystem:latest
     container_name: django_app
     ports:
       - "8000:8000"
@@ -47,9 +47,9 @@ services:
     restart: on-failure
 
   celery:
-    image: sisyetad/medicalscheduler:latest
+    image: sisyetad/hospitalmanagementsystem:latest
     container_name: celery_worker
-    command: celery -A medicalschedulerbackend worker --loglevel=info
+    command: celery -A hospitalmanagementsystem worker --loglevel=info
     volumes:
       - .:/app
     depends_on:

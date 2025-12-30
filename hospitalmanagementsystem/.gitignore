@@ -41,3 +41,4 @@ Desktop.ini
 ../.venv/
 .venv/
 venv/
+./django_debug.log
