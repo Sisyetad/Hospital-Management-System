@@ -14,7 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from User.Infrastructure.user_repo_imp import DjangoUserRepository
 from User.Application.user_service import UserService
-from hospitalmanagementsystem.User.Domain.user_entity import UserEntity
+from User.Domain.user_entity import UserEntity
 
 class AuthView(APIView):
     serializer_class = UserSerializer
