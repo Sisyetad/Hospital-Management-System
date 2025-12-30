@@ -18,4 +18,4 @@ class IReceptionistRepository(ABC):
     def getReceptionistByEmail(self, email): pass
 
     @abstractmethod
-    def getReceptionistOfBranch(self): pass
+    def getReceptionistOfBranch(self, branch_id:int=None): pass

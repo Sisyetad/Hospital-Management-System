@@ -37,8 +37,8 @@ class ReceptionistService:
         except ValidationError as e:
             raise ValidationError(str(e))
 
-    def getReceptionistOfBranch(self)-> list[ReceptionistEntity]:
+    def getReceptionistOfBranch(self, branch_id:int=None)-> list[ReceptionistEntity]:
         try:
-            return self.repository.getReceptionistOfBranch()
+            return self.repository.getReceptionistOfBranch(branch_id=branch_id)
         except ValidationError as e:
             raise ValidationError(str(e))

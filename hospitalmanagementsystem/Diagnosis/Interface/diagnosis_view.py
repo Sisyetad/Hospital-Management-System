@@ -28,6 +28,7 @@ class DiagnosisViewSet(viewsets.ViewSet):
         ],
     )
     def list(self, request):
+        """GET /diagnoses/?patient_id={patient_id}"""
         patient_id = request.query_params.get("patient_id")
         data = {"patient_id": patient_id}
         serializer = DiagnosisSerializer(data=data, context={"action":"list"})

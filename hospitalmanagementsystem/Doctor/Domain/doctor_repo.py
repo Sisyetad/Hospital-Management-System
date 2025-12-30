@@ -14,7 +14,7 @@ class IDoctorRepository(ABC):
     def getDoctor(self, doctor_id:int) -> DoctorEntity:pass
 
     @abstractmethod
-    def getDoctorsOfBranch(self, branch_id:int) -> list[DoctorEntity]:pass
+    def getDoctorsOfBranch(self, branch_id:int=None) -> list[DoctorEntity]:pass
 
     @abstractmethod
     def getDoctorByEmail(self, email: str) -> DoctorEntity: pass

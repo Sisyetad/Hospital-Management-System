@@ -47,13 +47,11 @@ class DoctorRepository(IDoctorRepository):
         except DoctorModel.DoesNotExist:
             raise ValidationError("Doctor does not exist!")
 
-    def getDoctorsOfBranch(self, branch_id:int)-> list[DoctorEntity]:
-        try:
-            branch = BranchModel.objects.get(pk=branch_id)
-        except BranchModel.DoesNotExist:
-            raise ValidationError("Branch does not exist!")
-        
-        doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch=branch)
+    def getDoctorsOfBranch(self, branch_id:int=None)-> list[DoctorEntity]:
+        if branch_id:
+            doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__id= branch_id)
+        else:
+            doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__email = self.current_user.email)
         return [doctor.to_entity() for doctor in doctors]
 
     def getDoctorByEmail(self, email: str) -> DoctorEntity:

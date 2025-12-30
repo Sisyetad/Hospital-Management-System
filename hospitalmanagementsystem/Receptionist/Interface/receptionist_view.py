@@ -40,10 +40,11 @@ class ReceptionistViewSet(viewsets.ViewSet):
     responses=ReceptionistSerializer(many=True),
     )
     def list(self, request):
-        """GET /receptionists/"""
+        """GET /receptionists/?branch_id={branch_id}"""
         try:
             service = self.get_service(request=request)
-            result = service.getReceptionistOfBranch()
+            branch_id = request.query_params.get('branch_id')
+            result = service.getReceptionistOfBranch(branch_id=branch_id)
             serializer = ReceptionistSerializer(result, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:

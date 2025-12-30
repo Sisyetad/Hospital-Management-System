@@ -14,6 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from User.Infrastructure.user_repo_imp import DjangoUserRepository
 from User.Application.user_service import UserService
+from hospitalmanagementsystem.User.Domain.user_entity import UserEntity
 
 class AuthView(APIView):
     serializer_class = UserSerializer
@@ -117,3 +118,19 @@ class AuthView(APIView):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+    def update_profile(self, request: Request):
+        serializer = UserSerializer(data=request.data, context={'action': 'update_profile'})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            userService = self.get_service(request)
+            user = UserEntity(
+                user_id=request.user.id,
+                username=data.get('username', None),
+                email=data.get('email', None),
+                password=data.get('password', None)
+            )
+            user = userService.update_user(user)
+            return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

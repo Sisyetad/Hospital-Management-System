@@ -149,9 +149,7 @@ class DoctorViewSet(viewsets.ViewSet):
         DoctorSerializer(context={"action": "list_available_doctors"})
         try:
             service = self.get_query_service(request)
-            recepService = ReceptionistService(ReceptionistRepository(current_user=request.user))
-            receptionist = recepService.getReceptionistByEmail(request.user.email)
-            branch_id = receptionist.branch.branch_id
+            branch_id = request.query_params.get('branch_id', None)
             doctors = service.get_available_doctors(branch_id=branch_id)
             for doc in doctors:
                 print(f"Doctor: {doc.doctor_name}, is_available: {doc.is_available} (type: {type(doc.is_available)})")
