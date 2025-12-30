@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'User.UserModel'
 
 MIDDLEWARE = [
-        'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -131,7 +131,14 @@ FIELD_ENCRYPTION_KEY = config('FIELD_ENCRYPTION_KEY')
 
 SIMPLE_HISTORY_HISTORY_USER_MODEL = 'User.UserModel'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOWED_ORIGINS = [
+    "https://hospital-management-acna.onrender.com",
+    "http://localhost:8000",
+    "https://hospital-management-system-kappa-nine.vercel.app",
+]
+
 CORS_ALLOW_HEADERS = [
     "authorization",
     "content-type",
@@ -152,7 +159,7 @@ CORS_ALLOW_METHODS = [
 ]
 
 USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = False  # Redirect all HTTP to HTTPS.
+SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS.
 SECURE_HSTS_SECONDS = 3600  # Enables Strict-Transport-Security.
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -248,22 +255,55 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = []
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# 
+# LOGGING = {
+    # 'version': 1,
+    # 'disable_existing_loggers': False,
+    # 'handlers': {
+        # 'file': {
+            # 'level': 'DEBUG',
+            # 'class': 'logging.FileHandler',
+            # 'filename': 'django_debug.log',
+        # },
+    # },
+    # 'loggers': {
+        # 'django': {
+            # 'handlers': ['file'],
+            # 'level': 'DEBUG',
+            # 'propagate': True,
+        # },
+    # },
+# }
+
+# LOGGING = {
+    # "version": 1,
+    # "disable_existing_loggers": False,
+    # "handlers": {
+        # "console": {
+            # "class": "logging.StreamHandler",
+        # },
+    # },
+    # "root": {
+        # "handlers": ["console"],
+        # "level": "INFO",
+    # },
+# }
+# 
+
+
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'django_debug.log',
-        },
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
     },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
+    "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+if os.environ.get("DEBUG") == "True":
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.FileHandler",
+        "filename": "django_debug.log",
+    }
+    LOGGING["root"]["handlers"].append("file")
