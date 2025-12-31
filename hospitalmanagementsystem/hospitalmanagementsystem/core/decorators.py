@@ -12,7 +12,8 @@ def cache_get(prefix: str, id_arg_name: str, ttl: int = 3600):
         def wrapper(self, *args, **kwargs):
             identifier = kwargs.get(id_arg_name)
             if identifier is None:
-                raise ValueError(f"Missing expected keyword arg: {id_arg_name}")
+                # If identifier is not provided, skip caching but still execute
+                return func(self, *args, **kwargs)
 
             cached_data = cache_helper.get(prefix, str(identifier))
             if cached_data:

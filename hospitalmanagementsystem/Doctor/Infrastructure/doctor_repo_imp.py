@@ -7,6 +7,10 @@ from Role.Infrastructure.role_model import RoleModel
 from django.core.exceptions import ValidationError
 
 class DoctorRepository(IDoctorRepository):
+    def __init__(self, current_user=None):
+        # current_user is optional, but required when inferring branch from the requester
+        self.current_user = current_user
+
     def createDoctor(self, doctor_name:str, email:str, role_name:str, department:str, phone:str, location:str, branch_email:str) -> DoctorEntity:
         try:
             role_model = RoleModel.objects.get(role_name=role_name)
@@ -47,10 +51,14 @@ class DoctorRepository(IDoctorRepository):
         except DoctorModel.DoesNotExist:
             raise ValidationError("Doctor does not exist!")
 
-    def getDoctorsOfBranch(self, branch_id:int=None)-> list[DoctorEntity]:
+    def getDoctorsOfBranch(self, branch_id:int=None, branch_name:str=None)-> list[DoctorEntity]:
         if branch_id:
             doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__id= branch_id)
+        elif branch_name:
+            doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__branch_name = branch_name)
         else:
+            if not self.current_user:
+                raise ValidationError("Current user is required to determine branch")
             doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__email = self.current_user.email)
         return [doctor.to_entity() for doctor in doctors]
 

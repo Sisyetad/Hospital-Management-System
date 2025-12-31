@@ -97,6 +97,4 @@ class ReceptionistRepository(IReceptionistRepository):
             receptionists = ReceptionistModel.objects.select_related('branch', 'role').filter(branch__id= branch_id)
         else:
             receptionists = ReceptionistModel.objects.select_related('branch', 'role').filter(branch__email = self.current_user.email)
-        if not receptionists.exists():
-            raise ValidationError("No receptionists found for this branch")
         return [receptionist.to_entity() for receptionist in receptionists]

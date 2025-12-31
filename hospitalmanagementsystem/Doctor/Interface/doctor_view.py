@@ -14,7 +14,6 @@ from User.Permission.role_permissions import DynamicRolePermission
 from Branch.Infrastructure.branch_repo_imp import BranchRepository
 from Role.Infrastructure.role_repo_imp import RoleRepository
 from Receptionist.Infrastructure.receptionist_repo_imp import ReceptionistRepository
-from Receptionist.Application.receptionist_service import ReceptionistService
 
 class DoctorViewSet(viewsets.ViewSet):
     serializer_class = DoctorSerializer
@@ -24,14 +23,18 @@ class DoctorViewSet(viewsets.ViewSet):
     
     def get_command_service(self, request):
         return DoctorCommandService(
-            doctor_repo=DoctorRepository(),
+            doctor_repo=DoctorRepository(current_user=request.user),
             branch_repo=BranchRepository(current_user=request.user),
             role_repo=RoleRepository(),
             current_user=request.user
         )
 
     def get_query_service(self, request):
-        return DoctorQueryService(DoctorRepository(), user=request.user, receRepo=ReceptionistRepository(current_user=request.user))
+        return DoctorQueryService(
+            DoctorRepository(current_user=request.user),
+            user=request.user,
+            receRepo=ReceptionistRepository(current_user=request.user),
+        )
     
     def create(self, request: Request):
         """POST /doctors/"""
@@ -81,41 +84,62 @@ class DoctorViewSet(viewsets.ViewSet):
             return Response(DoctorSerializer(result).data, status=status.HTTP_200_OK)
         except (ValidationError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
-    @extend_schema(
-        operation_id="doctors_retrieve",
-        responses=DoctorSerializer,
-    )
-    def retrieve(self, request: Request, pk= None):
-        """GET /doctors/{id or email}"""
-        DoctorSerializer(context={"action": "retrieve"})
-        try:
-            service = self.get_query_service(request)
-            result = service.get_doctor_by_email(email=pk) if '@' in str(pk) else service.get_doctor(doctor_id=pk)
-            return Response(DoctorSerializer(result).data, status=status.HTTP_200_OK)
-
-        except (ValidationError, PermissionDenied) as e:
-            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
     @extend_schema(
         operation_id="doctors_list",
         responses=DoctorSerializer(many=True),
     )
     def list(self, request):
-        """GET /doctors/{branch_id}"""
+        """GET /doctors/?email={email}"""
         DoctorSerializer(context={"action": "list"})
-        branch_id = request.query_params.get('branch_id', None)
+        
         try:
             service = self.get_query_service(request)
-            if branch_id:
-                doctors = service.get_doctors_of_branch(branch_id=branch_id)
-            else:
-                doctors = service.get_all_doctors(all='all')
+            email = request.query_params.get('email')
+            if email:
+                doctors = service.get_doctor_by_email(email=email)
+                return Response(DoctorSerializer(doctors).data, status=status.HTTP_200_OK)
+            
+            doctors = service.get_all_doctors(all='all')
             serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+    @action(detail=False, methods=['get'], url_path=r'branch')
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='branch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Optional branch id; defaults to requester's branch when omitted",
+            )
+        ],
+        responses=DoctorSerializer(many=True),
+        operation_id="doctors_list_of_branch",
+    )
+    def list_doctors_of_branch(self, request: Request):
+        """GET /doctors/branch/?branch_id={branch_id}"""
+        DoctorSerializer(context={"action": "list_doctors_of_branch"})
+        try:
+            service = self.get_query_service(request)
+            branch_id_param = request.query_params.get('branch_id')
+            if branch_id_param in (None, '', 'null', 'None'):
+                branch_id = None
+            else:
+                try:
+                    branch_id = int(branch_id_param)
+                except (TypeError, ValueError):
+                    return Response({"error": "branch_id must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
 
+            doctors = service.get_doctors_of_branch(branch_id=branch_id)
+            serializer = DoctorSerializer(doctors, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except (ValidationError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['patch'], url_path=r'availability')
     @extend_schema(
@@ -136,12 +160,13 @@ class DoctorViewSet(viewsets.ViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='branch_id',
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.PATH,
+                name='branch_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Optional branch name filter",
             )
         ],
-        responses=DoctorSerializer(many=True),
         operation_id="doctors_available_list",
     )
     def list_available_doctors(self, request):
@@ -149,9 +174,24 @@ class DoctorViewSet(viewsets.ViewSet):
         DoctorSerializer(context={"action": "list_available_doctors"})
         try:
             service = self.get_query_service(request)
-            branch_id = request.query_params.get('branch_id', None)
-            doctors = service.get_available_doctors(branch_id=branch_id)
+            branch_name = request.query_params.get('branch_name', None)
+            doctors = service.get_available_doctors(branch_name=branch_name)
             serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @extend_schema(
+    operation_id="doctors_retrieve",
+    responses=DoctorSerializer,
+    )
+    def retrieve(self, request: Request, pk= None):
+        """GET /doctors/{id}"""
+        DoctorSerializer(context={"action": "retrieve"})
+        try:
+            service = self.get_query_service(request)
+            result = service.get_doctor(doctor_id=pk)
+            return Response(DoctorSerializer(result).data, status=status.HTTP_200_OK)
+        except (ValidationError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+    

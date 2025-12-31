@@ -133,8 +133,8 @@ class DiagnosisViewSet(viewsets.ViewSet):
         data = serializer.validated_data
         try:
             service = self.get_service(request=request)
-            visibility = data.get('visibility')
-            diagnosis_status = data.get('diagnosis_status')
+            visibility = data.get('visibility', None)
+            diagnosis_status = data.get('diagnosis_status', None)
             if visibility is not None:
                 result = service.verify_vissiblity(
                     diagnosis_id=pk

@@ -1,5 +1,7 @@
 from rest_framework import status,viewsets
 from rest_framework.response import Response
+from django.forms import ValidationError
+from django.core.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from User.Permission.role_permissions import DynamicRolePermission
@@ -34,21 +36,6 @@ class ReceptionistViewSet(viewsets.ViewSet):
             return Response(ReceptionistSerializer(result).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @extend_schema(
-    operation_id="receptionists_list",
-    responses=ReceptionistSerializer(many=True),
-    )
-    def list(self, request):
-        """GET /receptionists/?branch_id={branch_id}"""
-        try:
-            service = self.get_service(request=request)
-            branch_id = request.query_params.get('branch_id')
-            result = service.getReceptionistOfBranch(branch_id=branch_id)
-            serializer = ReceptionistSerializer(result, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
         operation_id="receptionist_retrieve",
@@ -114,3 +101,41 @@ class ReceptionistViewSet(viewsets.ViewSet):
             return Response({"message": "Receptionist deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+
+    @extend_schema(
+        operation_id="receptionists_list",
+        responses=ReceptionistSerializer(many=True),
+    )
+    def list(self, request):
+        """
+        GET /receptionists/?email={email}
+        GET /receptionists/?branch_id={branch_id}
+        """
+        try:
+            email = request.query_params.get("email")
+            branch_id = request.query_params.get("branch_id")
+
+            # 🔹 Retrieve by email (single object)
+            if email:
+                service = self.get_service(request)
+                result = service.getReceptionistByEmail(email=email)
+                serializer = ReceptionistSerializer(result)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            # 🔹 List by branch
+            elif branch_id:
+                service = self.get_service(request=request)
+                result = service.getReceptionistOfBranch(branch_id=branch_id)
+                serializer = ReceptionistSerializer(result, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                service = self.get_service(request=request)
+                result = service.getReceptionistOfBranch()
+                serializer = ReceptionistSerializer(result, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except (ValidationError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
