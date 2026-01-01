@@ -118,11 +118,12 @@ class AuthView(APIView):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
-    def update_profile(self, request: Request):
-        serializer = UserSerializer(data=request.data, context={'action': 'update_profile'})
+    def update(self, request: Request):
+        serializer = UserSerializer(data=request.data, context={'action': 'update'})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
+            
             userService = self.get_service(request)
             user = UserEntity(
                 user_id=request.user.id,
