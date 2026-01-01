@@ -30,7 +30,7 @@ class AuthView(APIView):
         action = self.kwargs.get('action')
         if action in ['signup', 'login']:
             return [AllowAny()]
-        elif action in ['logout','retrieve_profile']:
+        elif action in ['logout','retrieve_profile', 'update']:
             return [IsAuthenticated()]
         return super().get_permissions()
 
@@ -56,6 +56,10 @@ class AuthView(APIView):
             return self.logout(request)
         return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request: Request, action: str = None):
+        if action == 'update':
+            return self.update(request)
+        return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
     
     def signup(self, request: Request):
         serializer = UserSerializer(data=request.data, context={'action': 'signup'})
@@ -129,7 +133,9 @@ class AuthView(APIView):
                 user_id=request.user.id,
                 username=data.get('username', None),
                 email=data.get('email', None),
-                password=data.get('password', None)
+                password=data.get('password', None),
+                is_active=data.get('is_active', None),
+                role=data.get('role', None),
             )
             user = userService.update_user(user)
             return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
