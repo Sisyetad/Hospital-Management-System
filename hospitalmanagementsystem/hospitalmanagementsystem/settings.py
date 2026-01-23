@@ -42,7 +42,7 @@ AUTH_USER_MODEL = 'User.UserModel'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'hospitalmanagementsystem.core.middleware.redis_cache_middleware.RedisCacheMiddleware',
@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'hospitalmanagementsystem.core.middleware.device_location.DeviceLocationMiddleware',
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -85,10 +86,15 @@ DATABASES = {
         'PORT': config('DATABASE_PORT', default='5432'),
     }
 }
+IPINFO_TOKEN = config('IPINFO_TOKEN', default='')
+LOGIN_AUDIT_PATHS = [
+    '/api/v1/auth/',
+    '/admin/login/',
+]
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # AUTH_PASSWORD_VALIDATORS = [
@@ -169,8 +175,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "https://hospital-management-system-kappa-nine.vercel.app",
 ]
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 
 
