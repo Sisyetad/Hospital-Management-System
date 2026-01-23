@@ -6,6 +6,7 @@ from Role.Domain.role_entity import Role
 @dataclass
 class UserEntity:
     user_id: Optional[int]
+    professional_id: Optional[str]
     username: str
     email: str
     password: str

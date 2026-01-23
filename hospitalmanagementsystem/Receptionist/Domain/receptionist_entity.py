@@ -1,9 +1,8 @@
+# Receptionist/Domain/receptionist_entity.py
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-
 from Role.Domain.role_entity import Role
-from Branch.Domain.branch_entity import BranchEntity
 
 @dataclass
 class ReceptionistEntity:
@@ -12,8 +11,9 @@ class ReceptionistEntity:
     email: str
     phone: str
     location: str
-    branch: BranchEntity
     role: Role
+    branch_id: int
+    branch_name: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_active: bool = False

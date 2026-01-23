@@ -9,7 +9,7 @@ class ReceptionistModel(models.Model):
     phone= models.CharField(unique= True, max_length= 255)
     location= models.CharField(max_length=255)
     role = models.ForeignKey(RoleModel, on_delete= models.CASCADE)
-    branch= models.ForeignKey(BranchModel, on_delete= models.CASCADE)
+    branch= models.ForeignKey(BranchModel, on_delete= models.CASCADE, related_name='receptionists')
     created_at = models.DateTimeField(auto_now_add= True)
     updated_at = models.DateTimeField(auto_now= True)
     is_active = models.BooleanField(default= False)
@@ -22,7 +22,8 @@ class ReceptionistModel(models.Model):
             phone= self.phone,
             location= self.location,
             role= self.role,
-            branch= self.branch.to_entity(),
+            branch_id= self.branch.pk,
+            branch_name= self.branch.branch_name,
             created_at= self.created_at,
             updated_at= self.updated_at,
             is_active= self.is_active

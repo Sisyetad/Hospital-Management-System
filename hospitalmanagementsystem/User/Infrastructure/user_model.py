@@ -10,7 +10,7 @@ class UserModel(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=False)
-
+    professional_id = models.CharField(max_length=255)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -23,7 +23,8 @@ class UserModel(AbstractUser):
             role=self.role.to_entity(),
             created_at=self.created_at,
             updated_at=self.updated_at,
-            is_active= self.is_active
+            is_active= self.is_active,
+            professional_id=self.professional_id
         )
 
     class Meta:

@@ -8,6 +8,7 @@ from Role.Interface.role_serializer import RoleSerializer
 
 class UserSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(read_only=True)
+    professional_id = serializers.CharField(read_only=True)
     email = serializers.EmailField()
     username = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True, required=False)

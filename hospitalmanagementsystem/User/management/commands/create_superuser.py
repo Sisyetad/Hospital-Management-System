@@ -57,12 +57,22 @@ class Command(createsuperuser.Command):
 
         # Create superuser
         try:
+            # Create Headoffice only if not exists
+            headoffice, created = HeadofficeModel.objects.get_or_create(
+                email=email,
+                defaults={
+                    'headoffice_name': username,
+                    'role': role,
+                    'is_active': True
+                }
+            )
             user, created = UserModel.objects.get_or_create(
                 email=email,
                 defaults={
                     'username': username,
                     'password': password,  # will be hashed automatically
                     'role': role,
+                    'professional_id': headoffice.pk,
                     'is_superuser': True,
                     'is_staff': True,
                     'is_active': True,
@@ -75,15 +85,6 @@ class Command(createsuperuser.Command):
                 user.save()
                 print(f"Superuser '{email}' already exists, password updated.")
 
-            # Create Headoffice only if not exists
-            HeadofficeModel.objects.get_or_create(
-                email=email,
-                defaults={
-                    'headoffice_name': username,
-                    'role': role,
-                    'is_active': True
-                }
-            )
             self.stdout.write(self.style.SUCCESS(f"Superuser created successfully: {email}"))
         except Exception as e:
             raise CommandError(f"Error creating superuser: {str(e)}")

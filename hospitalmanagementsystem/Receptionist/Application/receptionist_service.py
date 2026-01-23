@@ -1,6 +1,7 @@
 from django.forms import ValidationError
 from Receptionist.Domain.receptionist_repo import IReceptionistRepository
 from Receptionist.Domain.receptionist_entity import ReceptionistEntity
+from User.Application.task import send_user_created_confirmation_email
 
 
 class ReceptionistService:
@@ -9,7 +10,9 @@ class ReceptionistService:
 
     def createReceptionist(self, receptionist_name, email, phone, role_name, location)-> ReceptionistEntity:
         try:
-            return self.repository.createReceptionist(receptionist_name=receptionist_name, email=email, phone=phone, role_name=role_name, location=location)
+            rec = self.repository.createReceptionist(receptionist_name=receptionist_name, email=email, phone=phone, role_name=role_name, location=location)
+            send_user_created_confirmation_email.delay(rec.email)
+            return rec
         except ValidationError as e:
             raise ValidationError(str(e))
 

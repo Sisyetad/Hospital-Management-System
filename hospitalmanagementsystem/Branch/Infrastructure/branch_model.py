@@ -21,21 +21,29 @@ class BranchModel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=False)
 
-
     def to_entity(self):
         return BranchEntity(
             branch_id=self.pk,
             branch_name=self.branch_name,
             email=self.email,
-            phone=self.phone,
-            location=self.location,
             speciality=self.speciality,
             role=self.role,
+            headoffice=self.headoffice,
+            phone=self.phone,
+            location=self.location,
+            is_active=self.is_active,
             created_at=self.created_at,
             updated_at=self.updated_at,
-            is_active=self.is_active,
-            headoffice=self.headoffice
+            receptionists=[
+                r
+                for r in self.receptionists.all()  # related_name
+            ],
+            doctors=[
+                r
+                for r in self.doctors.all()  # related_name
+            ]
         )
+
 
     class Meta:
         db_table = 'branch'

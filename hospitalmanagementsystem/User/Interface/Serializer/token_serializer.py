@@ -14,6 +14,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['role'] = user.role.role_name
         token['is_verified'] = user.is_active
+        token['professional_id'] = user.professional_id
 
         return token
 
@@ -33,6 +34,6 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         access["email"] = user.email
         access["role"] = user.role.role_name
         access["is_verified"] = user.is_active
-
+        access["professional_id"] = user.professional_id
         data["access_token"] = str(access)
         return data

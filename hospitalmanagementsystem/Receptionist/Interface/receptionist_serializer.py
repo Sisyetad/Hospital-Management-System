@@ -10,7 +10,7 @@ class ReceptionistSerializer(serializers.Serializer):
     location = serializers.CharField(required=False)
     role_name = serializers.SerializerMethodField()
     role=RoleSerializer(write_only=True)
-    branch_name = serializers.SerializerMethodField()
+    branch_name = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
@@ -18,10 +18,6 @@ class ReceptionistSerializer(serializers.Serializer):
     @extend_schema_field(str)
     def get_role_name(self, obj):
         return obj.role.role_name if obj.role else None
-    
-    @extend_schema_field(str)
-    def get_branch_name(self, obj):
-        return obj.branch.branch_name if obj.branch else None
     
     def validate(self, data):
         action = self.context.get('action')

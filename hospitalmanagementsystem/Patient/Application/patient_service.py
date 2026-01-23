@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from Patient.Domain.patient_repo import IPatientRepository
 from Patient.Domain.patient_entity import PatientEntity
+from User.Application.task import send_user_created_confirmation_email
 
 
 class PatientService:
@@ -9,7 +10,9 @@ class PatientService:
 
     def createPatient(self, full_name:str, email:str, phone:str, location:str, sex:str, birth_date, role_name:str)-> PatientEntity:
         try:
-            return self.repository.createPatient(full_name=full_name, email=email, phone=phone, location=location, sex=sex, birth_date=birth_date, role_name=role_name)
+            patient = self.repository.createPatient(full_name=full_name, email=email, phone=phone, location=location, sex=sex, birth_date=birth_date, role_name=role_name)
+            send_user_created_confirmation_email.delay(patient.email)
+            return patient
         except ValidationError as e:
             raise ValidationError(str(e))
         

@@ -1,6 +1,7 @@
 from typing import Optional
 from User.Infrastructure.user_model import UserModel
 from Branch.Domain.branch_entity import BranchEntity
+from User.Application.task import send_user_created_confirmation_email
 from ..Domain.branch_repo import IBranchRepository
 from django.core.exceptions import ValidationError
 from ..Domain.branch_repo import IBranchRepository
@@ -29,7 +30,9 @@ class BranchService:
             raise ValidationError("This is not the branch role name")
         
         try:
-            return self.repository.createBranch(branch_name, email, role_name, speciality, phone, location)
+            branch = self.repository.createBranch(branch_name, email, role_name, speciality, phone, location)
+            send_user_created_confirmation_email.delay(branch.email)
+            return branch
         except ValidationError as e:
             raise ValidationError(str(e))
 

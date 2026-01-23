@@ -60,6 +60,7 @@ class DjangoAuthRepository(IAuthRepository):
             user_model = UserModel(
                 username=username,
                 email=email,
+                professional_id=user.pk,
                 role=role,
                 is_active=True,
                 is_superuser=False,
