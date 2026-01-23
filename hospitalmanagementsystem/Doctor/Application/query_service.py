@@ -30,12 +30,11 @@ class DoctorQueryService:
         doctors =  [doc for doc in self.repo.getDoctorsOfBranch(branch_id)]
         return doctors
     
-    @cache_get("available_doctors", "branch_name")
-    def get_available_doctors(self, branch_name: str = None) -> list[DoctorEntity]:
+    def get_available_doctors(self) -> list[DoctorEntity]:
         # Pass branch_name as keyword to avoid being interpreted as branch_id
         doctors = [
             doc
-            for doc in self.repo.getDoctorsOfBranch(branch_name=branch_name)
+            for doc in self.repo.getDoctorsOfBranch()
             if doc.is_available is True
         ]
         return doctors

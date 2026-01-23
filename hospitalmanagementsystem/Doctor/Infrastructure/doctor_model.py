@@ -29,11 +29,12 @@ class DoctorModel(models.Model):
             location= self.location,
             role= self.role.to_entity(),
             department=self.department,
-            branch= self.branch.to_entity(),
+            branch_id= self.branch.pk,
             created_at=self.created_at,
             updated_at=self.updated_at,
             is_active=self.is_active,
-            is_available=self.is_available
+            is_available=self.is_available,
+            branch_name= self.branch.branch_name,
         )
 
     class Meta:

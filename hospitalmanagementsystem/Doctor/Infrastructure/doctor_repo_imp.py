@@ -6,6 +6,8 @@ from Branch.Infrastructure.branch_model import BranchModel
 from Role.Infrastructure.role_model import RoleModel
 from django.core.exceptions import ValidationError
 
+from Receptionist.Infrastructure.receptionist_model import ReceptionistModel
+
 class DoctorRepository(IDoctorRepository):
     def __init__(self, current_user=None):
         # current_user is optional, but required when inferring branch from the requester
@@ -34,14 +36,14 @@ class DoctorRepository(IDoctorRepository):
                 department=department
             )
 
-            return doctor_model.to_entity()
+            return doctor_model
 
     def deleteDoctor(self, doctor_id)-> str:
         try:
             doctor = DoctorModel.objects.get(pk=doctor_id)
         except DoctorModel.DoesNotExist:
             raise ValidationError("Doctor does not exist!")
-        doctor.delete()
+        doctor
         return "Doctor deleted successfully."
 
     def getDoctor(self, doctor_id)-> DoctorEntity:
@@ -51,15 +53,19 @@ class DoctorRepository(IDoctorRepository):
         except DoctorModel.DoesNotExist:
             raise ValidationError("Doctor does not exist!")
 
-    def getDoctorsOfBranch(self, branch_id:int=None, branch_name:str=None)-> list[DoctorEntity]:
+    def getDoctorsOfBranch(self, branch_id:int=None)-> list[DoctorEntity]:
         if branch_id:
             doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__id= branch_id)
-        elif branch_name:
-            doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__branch_name = branch_name)
         else:
             if not self.current_user:
                 raise ValidationError("Current user is required to determine branch")
-            doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__email = self.current_user.email)
+            if self.current_user.role.role_name.lower() == 'branch':
+                doctors = BranchModel.objects.get(pk=self.current_user.professional_id).doctors.select_related('branch', 'role').all()
+            elif self.current_user.role.role_name.lower() == 'doctor':
+                doctors = DoctorModel.objects.select_related('branch', 'role').branch.doctors.select_related('branch', 'role').all()
+            else:
+                doctors = ReceptionistModel.objects.get(pk=self.current_user.professional_id).branch.doctors.select_related('branch', 'role').all()
+            
         return [doctor.to_entity() for doctor in doctors]
 
     def getDoctorByEmail(self, email: str) -> DoctorEntity:
@@ -86,14 +92,14 @@ class DoctorRepository(IDoctorRepository):
         if location is not None:
             doctor.location = location
         doctor.save()
-        return doctor.to_entity()
+        return doctor
 
-    def updateStatusofDoctor(self, email)-> DoctorEntity:
+    def updateStatusofDoctor(self, email)-> DoctorModel:
         try:
             doctor = DoctorModel.objects.get(email=email)
             doctor.is_available = not doctor.is_available
             doctor.save()
-            return doctor.to_entity()
+            return doctor
         except DoctorModel.DoesNotExist:
             raise ValidationError("Doctor does not exist!")
 

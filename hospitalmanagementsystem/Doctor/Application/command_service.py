@@ -7,6 +7,7 @@ from constants.roles import ROLE_BRANCH, ROLE_DOCTOR
 from Branch.Domain.branch_repo import IBranchRepository
 from Role.Domain.role_repo import IRoleRepository
 from User.Permission.permission import require_roles
+from Doctor.Application.task import send_Im_Available_notif
 from hospitalmanagementsystem.core.domain_event import EventDispatcher
 
 class DoctorCommandService:
@@ -32,8 +33,8 @@ class DoctorCommandService:
             location=location,
             department=department,
             branch_email=self.current_user.email)
-        EventDispatcher.dispatch(DoctorCreated(doctor_id=doctor.doctor_id, branch_id=doctor.branch.branch_id, doctor_email=doctor.email))
-        return doctor
+        EventDispatcher.dispatch(DoctorCreated(doctor_id=doctor.pk, branch_id=doctor.branch.pk, doctor_email=doctor.email))
+        return doctor.to_entity()
 
     @require_roles(ROLE_BRANCH)
     def update_doctor(self, doctor_id, doctor_name=None, email=None, department=None, phone=None, location=None) -> DoctorEntity:
@@ -52,17 +53,17 @@ class DoctorCommandService:
         if not doctor:
             raise ValidationError("Doctor update failed.")
         
-        EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.doctor_id, branch_id=doctor.branch.branch_id))
-        return doctor
+        EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.pk, branch_id=doctor.branch.pk))
+        return doctor.to_entity()
 
     @require_roles(ROLE_DOCTOR)
     def update_doctor_status(self)-> DoctorEntity:
         doctor = self.doctor_repo.updateStatusofDoctor(email=self.current_user.email)
         if not doctor:
             raise ValidationError("Doctor status update failed.")
-
-        EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.doctor_id, branch_id=doctor.branch.branch_id))
-        return doctor
+        send_Im_Available_notif.delay(receptionists_email = [r.email for r in doctor.branch.receptionists.all()])
+        EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.pk, branch_id=doctor.branch.pk))
+        return doctor.to_entity()
 
     @require_roles(ROLE_BRANCH)
     def delete_doctor(self, doctor_id)-> bool:

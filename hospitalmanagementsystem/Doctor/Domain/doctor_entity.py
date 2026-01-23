@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from django.core.exceptions import ValidationError
-
 from Role.Domain.role_entity import Role
-from Branch.Domain.branch_entity import BranchEntity
 
 @dataclass
 class DoctorEntity:
@@ -14,7 +12,8 @@ class DoctorEntity:
     role: Role
     phone:str
     location:str
-    branch: BranchEntity
+    branch_id: int
+    branch_name: str
     department: str
     is_active: bool
     is_available: bool

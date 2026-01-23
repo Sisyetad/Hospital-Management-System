@@ -174,8 +174,7 @@ class DoctorViewSet(viewsets.ViewSet):
         DoctorSerializer(context={"action": "list_available_doctors"})
         try:
             service = self.get_query_service(request)
-            branch_name = request.query_params.get('branch_name', None)
-            doctors = service.get_available_doctors(branch_name=branch_name)
+            doctors = service.get_available_doctors()
             serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except (ValidationError, PermissionDenied) as e:

@@ -1,6 +1,6 @@
 # doctor/infrastructure/event_handlers.py
 from Doctor.Domain.events import DoctorCreated, DoctorUpdated, DoctorDeleted
-from Doctor.Application.task import send_doctor_created_confirmation_email
+from User.Application.task import send_user_created_confirmation_email
 from hospitalmanagementsystem.core.domain_event import EventDispatcher
 from hospitalmanagementsystem.core.redis_cache_helper import RedisCacheHelper
 
@@ -12,8 +12,7 @@ def handle_doctor_created(event: DoctorCreated):
         ('available_doctors', str(event.branch_id)),
         ('doctors', 'all')
     ])
-    send_doctor_created_confirmation_email.delay(event.doctor_id, event.doctor_email)
-
+    send_user_created_confirmation_email.delay(event.doctor_email)
 def handle_doctor_updated(event: DoctorUpdated):
     cache_helper.bulk_delete([
         ('doctors_of_branch', str(event.branch_id)),
