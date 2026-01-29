@@ -11,6 +11,7 @@ class DoctorSerializer(serializers.Serializer):
     department = serializers.CharField(required= False)
     role_name = serializers.SerializerMethodField()
     role = RoleSerializer(write_only= True)
+    branch_id = serializers.IntegerField(read_only= True)
     branch_name = serializers.CharField(read_only= True)
     created_at = serializers.DateTimeField(read_only= True)
     updated_at = serializers.DateTimeField(read_only= True)

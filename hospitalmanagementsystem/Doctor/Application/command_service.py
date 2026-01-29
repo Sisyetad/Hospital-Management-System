@@ -9,6 +9,7 @@ from Role.Domain.role_repo import IRoleRepository
 from User.Permission.permission import require_roles
 from Doctor.Application.task import send_Im_Available_notif
 from hospitalmanagementsystem.core.domain_event import EventDispatcher
+from hospitalmanagementsystem.utility.email_verfication import is_valid_email_format
 
 class DoctorCommandService:
     def __init__(self, doctor_repo: IDoctorRepository, branch_repo: IBranchRepository, role_repo: IRoleRepository, current_user=None):
@@ -24,7 +25,8 @@ class DoctorCommandService:
 
         if role_name.lower() != ROLE_DOCTOR:
             raise ValidationError('This service only to create the doctor object.')
-        
+        if not is_valid_email_format(email):
+            return ValidationError({"error": "Invalid email format"})
         doctor =  self.doctor_repo.createDoctor(
             doctor_name=doctor_name,
             email=email,
@@ -61,7 +63,8 @@ class DoctorCommandService:
         doctor = self.doctor_repo.updateStatusofDoctor(email=self.current_user.email)
         if not doctor:
             raise ValidationError("Doctor status update failed.")
-        send_Im_Available_notif.delay(receptionists_email = [r.email for r in doctor.branch.receptionists.all()])
+        if doctor.is_available:
+            send_Im_Available_notif.apply_async(args=[[r.email for r in doctor.branch.receptionists.all()], doctor.branch.pk])
         EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.pk, branch_id=doctor.branch.pk))
         return doctor.to_entity()
 

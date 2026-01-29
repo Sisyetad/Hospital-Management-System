@@ -10,8 +10,10 @@ DEBUG = config('DEBUG', cast=bool)
 HOST='localhost'
 
 ALLOWED_HOSTS = [
-    '*'
+    "hospital-management-acna.onrender.com",
+    "localhost",
 ]
+
 
 INSTALLED_APPS = [
     'corsheaders',
@@ -35,6 +37,8 @@ INSTALLED_APPS = [
     'Queue',
     'Diagnosis',
     'drf_spectacular',
+    'channels',
+    'hospitalmanagementsystem.notifications.apps.NotificationsConfig',
 ]
 
 AUTH_USER_MODEL = 'User.UserModel'
@@ -75,6 +79,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'hospitalmanagementsystem.wsgi.application'
+ASGI_APPLICATION = "hospitalmanagementsystem.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config("REDIS_URL")],
+        },
+    },
+}
 
 DATABASES = {
     'default': {
@@ -137,11 +151,11 @@ FIELD_ENCRYPTION_KEY = config('FIELD_ENCRYPTION_KEY')
 
 SIMPLE_HISTORY_HISTORY_USER_MODEL = 'User.UserModel'
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://hospital-management-acna.onrender.com",
-    "http://localhost:8000",
+    "http://localhost:8001",
     "https://hospital-management-system-kappa-nine.vercel.app",
 ]
 
@@ -166,7 +180,7 @@ CORS_ALLOW_METHODS = [
 CORS_ALLOW_CREDENTIALS = True
 
 USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS.
+SECURE_SSL_REDIRECT = False  # Redirect all HTTP to HTTPS.
 SECURE_HSTS_SECONDS = 3600  # Enables Strict-Transport-Security.
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -231,8 +245,15 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = config("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", 587)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 
 SIMPLE_JWT = {

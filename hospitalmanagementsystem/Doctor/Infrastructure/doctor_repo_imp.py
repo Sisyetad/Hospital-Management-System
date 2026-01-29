@@ -60,7 +60,7 @@ class DoctorRepository(IDoctorRepository):
             if not self.current_user:
                 raise ValidationError("Current user is required to determine branch")
             if self.current_user.role.role_name.lower() == 'branch':
-                doctors = BranchModel.objects.get(pk=self.current_user.professional_id).doctors.select_related('branch', 'role').all()
+                doctors = DoctorModel.objects.select_related('branch', 'role').filter(branch__id= self.current_user.professional_id)
             elif self.current_user.role.role_name.lower() == 'doctor':
                 doctors = DoctorModel.objects.select_related('branch', 'role').branch.doctors.select_related('branch', 'role').all()
             else:

@@ -19,6 +19,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from django.http import JsonResponse
+
+# Simple health check view
+def health_check(request):
+    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,5 +45,6 @@ urlpatterns = [
 
 
     path('auth/', include('djoser.urls')),                      # For /users/, /users/me/
-    path('auth/', include('djoser.urls.jwt')),   
+    path('auth/', include('djoser.urls.jwt')), 
+    path('', health_check),  
 ]
