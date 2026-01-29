@@ -4,8 +4,8 @@ import json
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         print("✅ WebSocket CONNECTED:", self.channel_name)
-
-        self.group_name = "receptionists"
+        self.branch_id = self.scope['url_route']['kwargs']['branch_id']
+        self.group_name = f"receptionists_branch_{self.branch_id}"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 

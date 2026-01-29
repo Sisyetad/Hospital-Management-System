@@ -64,7 +64,7 @@ class DoctorCommandService:
         if not doctor:
             raise ValidationError("Doctor status update failed.")
         if doctor.is_available:
-            send_Im_Available_notif.apply_async(args=[[r.email for r in doctor.branch.receptionists.all()], doctor.branch.pk])
+            send_Im_Available_notif.apply_async(args=[[r.email for r in doctor.branch.receptionists.all()], doctor.branch.pk, doctor.doctor_name])
         EventDispatcher.dispatch(DoctorUpdated(doctor_id=doctor.pk, branch_id=doctor.branch.pk))
         return doctor.to_entity()
 
