@@ -1,7 +1,10 @@
 from typing import Optional
+from pathlib import Path
+from threading import Timer
 from django.db import transaction
 from django.core.exceptions import PermissionDenied, ValidationError
 from simple_history.utils import update_change_reason
+from django.conf import settings
 
 from Diagnosis.Domain.diagnosis_repo import IDiagnosisRepository
 from Diagnosis.Infrastructure.diagnosis_model import DiagnosisModel
@@ -10,6 +13,7 @@ from Patient.Infrastructure.patient_model import PatientModel
 from User.Infrastructure.user_model import UserModel
 from constants.roles import ROLE_DOCTOR, ROLE_PATIENT, ROLE_HEADOFFICE
 from Diagnosis.Domain.diagnosis_entity import DiagnosisEntity
+from Diagnosis.Infrastructure.helper_function import build_history_pdf
 
 
 class DiagnosisRepository(IDiagnosisRepository):
@@ -41,6 +45,7 @@ class DiagnosisRepository(IDiagnosisRepository):
                 clinical_notes=clinical_notes,
                 patient=patient,
                 doctor=doctor,
+                branch=doctor.branch,
                 medication=medication,
                 visibility=True
             )
@@ -157,6 +162,42 @@ class DiagnosisRepository(IDiagnosisRepository):
 
         return history_list
 
+    def getHistoryPdf(self, diagnosis_id)-> Path:
+        """Generate a short-lived diagnosis history PDF and return the path."""
+        if not self.current_user:
+            raise PermissionDenied("Authentication is required.")
+
+        if self.current_user.role_name.strip().lower() != ROLE_HEADOFFICE:
+            raise PermissionDenied("Only the headoffice can display history version.")
+
+        try:
+            diagnosis = DiagnosisModel.objects.get(pk=diagnosis_id)
+        except DiagnosisModel.DoesNotExist:
+            raise ValidationError("Diagnosis not found.")
+
+        history_queryset = diagnosis.history.all().order_by('-history_date')
+        if not history_queryset.exists():
+            raise ValidationError("No history records found for this diagnosis.")
+
+        media_root = Path(getattr(settings, "MEDIA_ROOT") or (settings.BASE_DIR / "media"))
+        target_dir = media_root / "diagnosis_history"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        pdf_path = target_dir / f"diagnosis_{diagnosis_id}_history.pdf"
+
+        build_history_pdf(history_queryset=history_queryset, pdf_path=pdf_path, diagnosis_id=diagnosis_id)
+        # self._schedule_pdf_cleanup(pdf_path)
+        return pdf_path
+
+    def _schedule_pdf_cleanup(self, pdf_path: Path, ttl_seconds: int = 300):
+        def _cleanup():
+            try:
+                pdf_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        timer = Timer(ttl_seconds, _cleanup)
+        timer.daemon = True
+        timer.start()
 
     def updateDiagnosisStatus(self, diagnosis_id, diagnosis_status)-> DiagnosisEntity:
         if not self.current_user:

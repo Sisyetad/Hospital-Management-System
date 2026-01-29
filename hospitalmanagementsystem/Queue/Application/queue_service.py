@@ -1,6 +1,7 @@
 from typing import Optional
 from Queue.Domain.queue_repo import IQueueRepository
 from Queue.Domain.queue_entity import QueueEntity
+from Doctor.Application.task import send_Patient_Assigned_notif
 
 
 class QueueService:
@@ -27,13 +28,23 @@ class QueueService:
         
     def assignPatientToDoctor(self, queue_id:int, doctor_id:int)-> QueueEntity:
         try:
-            return self.repository.assignPatientToDoctor(queue_id=queue_id, doctor_id=doctor_id)
+            assigned = self.repository.assignPatientToDoctor(queue_id=queue_id, doctor_id=doctor_id)
+            send_Patient_Assigned_notif.apply_async(
+                args=[assigned.patient.email, assigned.doctor.doctor_name],
+                countdown=60  # send after 1 minute
+            )
+            return assigned
         except Exception as e:
             raise Exception(str(e))
         
     def assignPatientToDepartment(self, queue_id:int, department:str)-> QueueEntity:
         try:
-            return self.repository.assignPatientToDepartment(queue_id=queue_id, department=department)
+            assigned = self.repository.assignPatientToDepartment(queue_id=queue_id, department=department)
+            send_Patient_Assigned_notif.apply_async(
+                args=[assigned.patient.email, assigned.doctor.doctor_name],
+                countdown=60  # send after 1 minute
+            )
+            return assigned
         except Exception as e:
             raise Exception(str(e))
         

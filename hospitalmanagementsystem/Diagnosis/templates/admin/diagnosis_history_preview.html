@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="module" style="margin: 10px 0;">
+  <h2>Overview</h2>
+  <table class="admin-table" style="width:100%;">
+    <tbody>
+      {% for key, value in overview.items %}
+      <tr>
+        <th style="width: 20%; text-align: left;">{{ key }}</th>
+        <td>{{ value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div style="margin: 10px 0;">
+  <a class="button" href="{{ download_url }}">Download PDF</a>
+  <a class="button" href="{{ back_url }}">Back</a>
+  <a class="button" href="{{ pdf_url }}" target="_blank">Open in New Tab</a>
+  </div>
+
+<div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
+  <object data="{{ pdf_url }}" type="application/pdf" width="100%" height="800">
+    <p>PDF preview unavailable. <a href="{{ download_url }}">Download</a></p>
+  </object>
+</div>
+{% endblock %}

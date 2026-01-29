@@ -40,6 +40,12 @@ class DiagnosisService:
             return self.repository.displayHistory(diagnosis_id=diagnosis_id)
         except Exception as e:
             raise Exception(str(e))
+
+    def getHistoryPdf(self, diagnosis_id):
+        try:
+            return self.repository.getHistoryPdf(diagnosis_id=diagnosis_id)
+        except Exception as e:
+            raise Exception(str(e))
         
     def updateDiagnosisStatus(self, diagnosis_id, diagnosis_status)-> DiagnosisEntity:
         try:

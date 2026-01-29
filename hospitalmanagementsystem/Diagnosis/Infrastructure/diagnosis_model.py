@@ -5,6 +5,7 @@ from encrypted_model_fields.fields import EncryptedTextField
 from Diagnosis.Domain.diagnosis_entity import DiagnosisEntity
 from Doctor.Infrastructure.doctor_model import DoctorModel
 from Patient.Infrastructure.patient_model import PatientModel
+from Branch.Infrastructure.branch_model import BranchModel
 
 
 class DiagnosisModel(models.Model):
@@ -19,6 +20,10 @@ class DiagnosisModel(models.Model):
         null=True,
         blank=True,
         related_name='diagnosis')
+    # branch = models.ForeignKey(BranchModel, 
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True)
     medication = EncryptedTextField(null=True, blank=True)
     visibility = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add= True)

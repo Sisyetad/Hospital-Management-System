@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from django.http import FileResponse
+from django.core.exceptions import PermissionDenied, ValidationError
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from User.Permission.role_permissions import DynamicRolePermission
 from Diagnosis.Application.diagnosis_service import DiagnosisService
@@ -169,3 +171,31 @@ class DiagnosisViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'], url_path='history/pdf')
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+        responses={200: OpenApiTypes.BINARY},
+        operation_id="diagnosis_history_pdf",
+    )
+    def display_history_pdf(self, request, pk=None):
+        """GET /diagnoses/{pk}/history/pdf"""
+        try:
+            service = self.get_service(request=request)
+            pdf_path = service.getHistoryPdf(diagnosis_id=pk)
+        except PermissionDenied as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        response = FileResponse(pdf_path.open("rb"), content_type="application/pdf")
+        response["Content-Disposition"] = f"inline; filename=diagnosis_{pk}_history.pdf"
+        return response

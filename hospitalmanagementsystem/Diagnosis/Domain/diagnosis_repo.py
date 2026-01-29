@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from click import Path
+
 from Diagnosis.Domain.diagnosis_entity import DiagnosisEntity
 
 
@@ -24,3 +26,6 @@ class IDiagnosisRepository(ABC):
 
     @abstractmethod
     def updateDiagnosisStatus(self, diagnosis_id, diagnosis_status)-> DiagnosisEntity:pass
+    
+    @abstractmethod
+    def getHistoryPdf(self, diagnosis_id)-> Path:pass
