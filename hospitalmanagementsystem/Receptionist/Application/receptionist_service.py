@@ -2,6 +2,7 @@ from django.forms import ValidationError
 from Receptionist.Domain.receptionist_repo import IReceptionistRepository
 from Receptionist.Domain.receptionist_entity import ReceptionistEntity
 from User.Application.task import send_user_created_confirmation_email
+from hospitalmanagementsystem.utility.email_verfication import is_valid_email_format
 
 
 class ReceptionistService:
@@ -10,6 +11,8 @@ class ReceptionistService:
 
     def createReceptionist(self, receptionist_name, email, phone, role_name, location)-> ReceptionistEntity:
         try:
+            if not is_valid_email_format(email):
+                return ValidationError({"error": "Invalid email format"})
             rec = self.repository.createReceptionist(receptionist_name=receptionist_name, email=email, phone=phone, role_name=role_name, location=location)
             send_user_created_confirmation_email.delay(rec.email)
             return rec

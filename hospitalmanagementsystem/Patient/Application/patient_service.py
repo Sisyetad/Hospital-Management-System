@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from Patient.Domain.patient_repo import IPatientRepository
 from Patient.Domain.patient_entity import PatientEntity
 from User.Application.task import send_user_created_confirmation_email
+from hospitalmanagementsystem.utility.email_verfication import is_valid_email_format
 
 
 class PatientService:
@@ -10,6 +11,8 @@ class PatientService:
 
     def createPatient(self, full_name:str, email:str, phone:str, location:str, sex:str, birth_date, role_name:str)-> PatientEntity:
         try:
+            if not is_valid_email_format(email):
+                return ValidationError({"error": "Invalid email format"})
             patient = self.repository.createPatient(full_name=full_name, email=email, phone=phone, location=location, sex=sex, birth_date=birth_date, role_name=role_name)
             send_user_created_confirmation_email.delay(patient.email)
             return patient

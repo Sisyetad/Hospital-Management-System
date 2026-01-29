@@ -2,6 +2,7 @@ from typing import Optional
 from User.Infrastructure.user_model import UserModel
 from Branch.Domain.branch_entity import BranchEntity
 from User.Application.task import send_user_created_confirmation_email
+from hospitalmanagementsystem.utility.email_verfication import is_valid_email_format
 from ..Domain.branch_repo import IBranchRepository
 from django.core.exceptions import ValidationError
 from ..Domain.branch_repo import IBranchRepository
@@ -25,6 +26,9 @@ class BranchService:
         # Check role permission
         if self.current_user.role.role_name.lower() != ROLE_HEADOFFICE.lower():
             raise PermissionDenied("Only admins can create Branch.")
+        
+        if not is_valid_email_format(email):
+            return ValidationError({"error": "Invalid email format"})
 
         if role_name.lower() != ROLE_BRANCH:
             raise ValidationError("This is not the branch role name")
